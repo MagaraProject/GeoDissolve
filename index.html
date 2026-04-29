@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title data-i18n-title="page_title">GeoDissolve — Dissolve, Filters &amp; QA</title>
+    <link rel="stylesheet" href="libs/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .leaflet-tooltip.gd-tooltip {
+        background: rgba(15,20,25,0.92); color: #e2e8f0;
+        border: 1px solid #334155; border-radius: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.35); max-width: 260px;
+      }
+      .tip-table { border-collapse: collapse; font-size: 0.72rem; }
+      .tip-table td { padding: 0.1rem 0.35rem; vertical-align: top; }
+      .tip-table td:first-child { color: #94a3b8; white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+
+    <!-- ===== HEADER ===== -->
+    <header class="app-header">
+      <div>
+        <h1>GeoDissolve</h1>
+        <div class="sub" data-i18n="subtitle">Dissolve, filters, geometry QA — fully offline, no server required</div>
+      </div>
+      <div class="header-right">
+        <span class="badge" id="worker-status-badge">…</span>
+
+        <!-- Language switcher -->
+        <div class="lang-switcher" id="lang-switcher">
+          <button type="button" class="lang-btn" id="lang-btn" title="Language / Lingua">
+            🌐 <span id="lang-label">ENG</span> ▾
+          </button>
+          <div class="lang-dropdown" id="lang-dropdown">
+            <button type="button" class="lang-option active" data-lang="en">
+              <span class="lang-flag">🇬🇧</span> English
+            </button>
+            <button type="button" class="lang-option" data-lang="it">
+              <span class="lang-flag">🇮🇹</span> Italiano
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="app-main">
+      <!-- ===== SIDEBAR ===== -->
+      <aside class="sidebar">
+        <div class="sidebar-scroll">
+
+          <!-- DATA / LAYERS -->
+          <section class="panel">
+            <div class="panel-header" tabindex="0">
+              <span>&#9660;</span> <span data-i18n="panel_data">Data / Layers</span>
+            </div>
+            <div class="panel-body">
+              <div class="row row-file-import">
+                <input type="file" id="file-geojson" accept=".json,.geojson,.txt"
+                  class="file-input-screenreader" />
+                <label for="file-geojson" class="btn primary file-import-label">
+                  &#128194; <span data-i18n="btn_load">Load GeoJSON…</span>
+                </label>
+                <button type="button" id="btn-sample" data-i18n="btn_sample">Sample</button>
+              </div>
+
+              <div id="data-messages" style="margin-top:0.5rem"></div>
+
+              <div style="margin-top:0.6rem">
+                <dl class="summary-grid">
+                  <dt data-i18n="sum_features">Features</dt><dd id="sum-count">—</dd>
+                  <dt data-i18n="sum_geom_types">Geometry types</dt><dd id="sum-types">—</dd>
+                  <dt>BBox</dt><dd id="sum-bbox">—</dd>
+                  <dt data-i18n="sum_props">Properties</dt>
+                  <dd><pre class="props-list" id="sum-keys">—</pre></dd>
+                </dl>
+              </div>
+
+              <label style="margin-top:0.6rem" data-i18n="lbl_layers">Layers</label>
+              <ul class="layer-list" id="layer-list"></ul>
+            </div>
+          </section>
+
+          <!-- FILTER / SUBSET -->
+          <section class="panel collapsed">
+            <div class="panel-header" tabindex="0">
+              <span>&#9656;</span> <span data-i18n="panel_filter">Filter / Subset</span>
+            </div>
+            <div class="panel-body">
+              <label data-i18n="lbl_scope">Scope</label>
+              <select id="filter-scope">
+                <option value="all" data-i18n="scope_all">Entire active layer</option>
+                <option value="filter" data-i18n="scope_filter">Apply attribute filter</option>
+              </select>
+
+              <label data-i18n="lbl_attribute">Attribute</label>
+              <select id="filter-prop">
+                <option value="" data-i18n="attr_placeholder">— load data —</option>
+              </select>
+
+              <label data-i18n="lbl_operator">Operator</label>
+              <select id="filter-op">
+                <option value="=">=</option>
+                <option value="!=">!=</option>
+                <option value="IN">IN</option>
+                <option value="contains" data-i18n="op_contains">contains</option>
+                <option value="startsWith" data-i18n="op_starts">starts with</option>
+              </select>
+
+              <div id="filter-value-wrap">
+                <label data-i18n="lbl_value">Value</label>
+                <input type="text" id="filter-value" data-i18n-placeholder="val_placeholder" placeholder="text value" />
+              </div>
+
+              <div id="filter-in-wrap" hidden>
+                <label data-i18n="lbl_in_values">Values (from layer)</label>
+                <div class="multi-values" id="filter-in-list"></div>
+              </div>
+
+              <p class="hint" id="filter-count-display" data-i18n="filter_count_init">Filtered: —</p>
+              <button type="button" class="primary" id="btn-save-subset" data-i18n="btn_save_subset">
+                Save subset as new layer
+              </button>
+            </div>
+          </section>
+
+          <!-- DISSOLVE -->
+          <section class="panel collapsed">
+            <div class="panel-header" tabindex="0">
+              <span>&#9656;</span> <span data-i18n="panel_dissolve">Dissolve / Aggregation</span>
+            </div>
+            <div class="panel-body">
+              <label data-i18n="lbl_input_layer">Input layer</label>
+              <select id="dissolve-input-layer"></select>
+
+              <label data-i18n="lbl_group1">Group by (1st level)</label>
+              <select id="dissolve-group1"><option value="">—</option></select>
+
+              <label data-i18n="lbl_group2">Group by (2nd level, optional)</label>
+              <select id="dissolve-group2"><option value="">—</option></select>
+
+              <label data-i18n="lbl_sum_fields">Sum numeric fields (comma-separated names)</label>
+              <input type="text" id="dissolve-sums"
+                data-i18n-placeholder="sum_placeholder" placeholder="e.g. pop, area_km2" />
+
+              <div class="progress-wrap" id="dissolve-progress">
+                <div class="progress-bar"><div id="dissolve-progress-bar"></div></div>
+                <p class="hint" id="dissolve-progress-label"></p>
+              </div>
+
+              <button type="button" class="primary" style="margin-top:0.5rem" id="btn-dissolve"
+                data-i18n="btn_dissolve">&#9654; Run Dissolve</button>
+              <p class="hint" id="dissolve-result-msg"></p>
+            </div>
+          </section>
+
+          <!-- QA -->
+          <section class="panel collapsed">
+            <div class="panel-header" tabindex="0">
+              <span>&#9656;</span> <span data-i18n="panel_qa">Geometry QA</span>
+            </div>
+            <div class="panel-body">
+              <label data-i18n="lbl_qa_layer">Layer to analyze</label>
+              <select id="qa-layer"></select>
+
+              <label data-i18n="lbl_overlap_thresh">Overlap threshold (fraction of smaller area)</label>
+              <input type="number" id="qa-overlap-rel" value="0.001" step="0.0001" min="0" />
+
+              <label data-i18n="lbl_sliver_area">Max sliver area (m²)</label>
+              <input type="number" id="qa-sliver-area" value="500" step="50" min="0" />
+
+              <div class="progress-wrap" id="qa-progress">
+                <div class="progress-bar"><div id="qa-progress-bar"></div></div>
+                <p class="hint" id="qa-progress-label"></p>
+              </div>
+
+              <div class="row" style="margin-top:0.5rem;flex-wrap:wrap;gap:0.35rem">
+                <button type="button" class="primary" id="btn-run-qa" data-i18n="btn_run_qa">&#9654; Run QA</button>
+                <button type="button" id="btn-export-qa-json" data-i18n="btn_export_json">Export JSON</button>
+                <button type="button" id="btn-export-qa-csv" data-i18n="btn_export_csv">Export CSV</button>
+              </div>
+
+              <div class="qa-table-wrap" style="margin-top:0.5rem">
+                <table class="qa-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="qa_th_type">Type</th>
+                      <th data-i18n="qa_th_ids">Feature IDs</th>
+                      <th data-i18n="qa_th_metric">Metric</th>
+                      <th data-i18n="qa_th_suggestion">Suggestion</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="qa-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+        </div><!-- /sidebar-scroll -->
+        <div class="footer-note" id="footer-note"></div>
+      </aside>
+
+      <!-- ===== MAP ===== -->
+      <div id="map-container">
+        <div id="map"></div>
+
+        <div class="map-toolbar">
+          <button type="button" id="btn-basemap" data-i18n="btn_basemap">Web basemap (OSM)</button>
+          <button type="button" id="btn-fit-all" data-i18n="btn_fit_all">Fit all</button>
+          <button type="button" id="btn-fit-active" data-i18n="btn_fit_active">Fit active</button>
+        </div>
+
+        <div id="map-side-hint" style="
+          position:absolute; bottom:12px; left:12px; z-index:1000;
+          background:rgba(15,20,25,0.88); padding:8px 12px; border-radius:8px;
+          font-size:0.75rem; max-width:300px; border:1px solid #334155;">
+          <strong data-i18n="selection_title">Selection</strong>
+          <div id="selection-detail" style="margin-top:5px;color:#94a3b8" data-i18n="selection_hint">
+            Click a polygon for details…
+          </div>
+        </div>
+
+        <!-- ===== ATTRIBUTE PANEL ===== -->
+        <div id="attr-panel">
+          <div id="ap-resize-handle" data-i18n-title="ap_resize_title" title="Drag to resize"></div>
+
+          <div id="ap-header">
+            <span id="ap-title" data-i18n="ap_title_default">Attributes</span>
+            <div id="ap-header-actions">
+              <label style="font-size:0.75rem;color:#94a3b8;display:flex;align-items:center;gap:4px">
+                <span data-i18n="ap_rows_per_page">Rows/page</span>
+                <select id="ap-pagesize" onchange="window._gdAttrPageSize(this.value)" style="width:70px">
+                  <option value="50">50</option>
+                  <option value="100" selected>100</option>
+                  <option value="250">250</option>
+                  <option value="500">500</option>
+                </select>
+              </label>
+              <div id="ap-pagination">
+                <button type="button" id="ap-btn-prev" onclick="window._gdAttrPrev()" disabled
+                  data-i18n="ap_prev">◀ Prev</button>
+                <span id="ap-page-info" style="font-size:0.75rem;color:#94a3b8;white-space:nowrap"></span>
+                <button type="button" id="ap-btn-next" onclick="window._gdAttrNext()"
+                  data-i18n="ap_next">Next ▶</button>
+              </div>
+              <button type="button" onclick="window._gdAttrPanelClose()" id="ap-btn-close"
+                data-i18n="ap_close" data-i18n-title="ap_close_title">✕ Close</button>
+            </div>
+          </div>
+
+          <div id="ap-unsaved-bar">
+            <span data-i18n="ap_unsaved">⚠ Unsaved changes</span>
+            <div style="display:flex;gap:6px">
+              <button type="button" class="primary" onclick="window._gdAttrSave()"
+                data-i18n="ap_save">💾 Save to layer</button>
+              <button type="button" onclick="window._gdAttrDiscard()"
+                data-i18n="ap_discard">↩ Discard all</button>
+            </div>
+          </div>
+
+          <div id="ap-table-wrap"></div>
+        </div>
+      </div>
+    </div><!-- /app-main -->
+
+    <script src="libs/leaflet.js"></script>
+    <script src="libs/jsts.min.js"></script>
+    <script src="libs/turf.min.js"></script>
+    <script src="js/app-bundle.js"></script>
+  </body>
+</html>
