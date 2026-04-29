@@ -1,0 +1,142 @@
+{
+  "type": "FeatureCollection",
+  "name": "sample_admin_areas",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "postal_code": "00100",
+        "region_code": "LAZ",
+        "region_name": "Lazio",
+        "province_code": "RM",
+        "province_name": "Roma Metro",
+        "municipality_code": "RMA",
+        "municipality_name": "Roma A",
+        "pop": 1200
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.45, 41.88],
+            [12.51, 41.88],
+            [12.51, 41.91],
+            [12.45, 41.91],
+            [12.45, 41.88]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "postal_code": "00101",
+        "region_code": "LAZ",
+        "region_name": "Lazio",
+        "province_code": "RM",
+        "province_name": "Roma Metro",
+        "municipality_code": "RMB",
+        "municipality_name": "Roma B",
+        "pop": 980
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.51, 41.88],
+            [12.57, 41.88],
+            [12.57, 41.91],
+            [12.51, 41.91],
+            [12.51, 41.88]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "postal_code": "00102",
+        "region_code": "LAZ",
+        "region_name": "Lazio",
+        "province_code": "RM",
+        "province_name": "Roma Metro",
+        "municipality_code": "RMC",
+        "municipality_name": "Roma C",
+        "pop": 750
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.48, 41.91],
+            [12.54, 41.91],
+            [12.54, 41.935],
+            [12.48, 41.935],
+            [12.48, 41.91]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "postal_code": "01100",
+        "region_code": "LAZ",
+        "region_name": "Lazio",
+        "province_code": "VT",
+        "province_name": "Viterbo",
+        "municipality_code": "VT1",
+        "municipality_name": "Viterbo North",
+        "pop": 420
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.05, 42.38],
+            [12.12, 42.38],
+            [12.12, 42.42],
+            [12.05, 42.42],
+            [12.05, 42.38]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "postal_code": "01101",
+        "region_code": "LAZ",
+        "region_name": "Lazio",
+        "province_code": "VT",
+        "province_name": "Viterbo",
+        "municipality_code": "VT2",
+        "municipality_name": "Viterbo South",
+        "pop": 395
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [12.12, 42.38],
+            [12.19, 42.38],
+            [12.19, 42.42],
+            [12.12, 42.42],
+            [12.12, 42.38]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sample point (excluded from dissolve)",
+        "postal_code": "99999"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.5, 41.9]
+      }
+    }
+  ]
+}
